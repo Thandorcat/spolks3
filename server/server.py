@@ -270,14 +270,21 @@ while True:
             client_ID += 1
 
         else:
-            request = ready_socket.recv(BUFFER_SIZE).decode('utf-8')
-            found_client = search_by_socket(clients_pool, ready_socket)
-            if found_client['is_downloading']:
-                continue_download(found_client, request)
-            elif request:
-                request = request.strip()
-                if request != '':
-                    print("[*] Received: %s" %request)
-                    handle_client_request(found_client, request)
-            else:
+            try:
+                request = ready_socket.recv(BUFFER_SIZE).decode('utf-8')
+                found_client = search_by_socket(clients_pool, ready_socket)
+                if found_client['is_downloading']:
+                    continue_download(found_client, request)
+                elif request:
+                    request = request.strip()
+                    if request != '':
+                        print("[*] Received: %s" % request)
+                        handle_client_request(found_client, request)
+                else:
+                    exit_client(found_client)
+            except ConnectionResetError:
+                found_client = search_by_socket(clients_pool, ready_socket)
+                print("[*] Connection with: %s:%d is closed" % (found_client['ip'], found_client['port']))
                 exit_client(found_client)
+
+
